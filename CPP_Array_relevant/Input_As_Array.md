@@ -21,7 +21,7 @@ int main()
 }
 ```
 The size_t N template parameter is a deduced integral value based upon the array size passed to the template function. 
-Templates parameters can be:
-a non-type template parameter;
-a type template parameter;
+Templates parameters can be:\
+a non-type template parameter;\
+a type template parameter;\
 a template template parameter.
