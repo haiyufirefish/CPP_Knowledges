@@ -1,5 +1,5 @@
 ### binary search is classical search algorithm
-Typical problems: find a value, find left bound, find right bound.\ 
+Typical problems: find a value, find left bound, find right bound./
 The following terms should be realized:\
 1. Never using else, instead of using using **else if**.\
 2. You use while (start <= end) if you are returning the match from inside the loop.\
