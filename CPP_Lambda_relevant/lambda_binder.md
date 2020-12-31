@@ -1,102 +1,131 @@
-From last chapter, lambda can be a return type, it can assigns value to 
-function pointer. But it is not convenient to use function pointer.
-In STL, it has polymorphy function object to wrap function:std::function
+## function object is a general broad concept
+It is a high-level abstract. It doesn't care about what is the object,
+but just care about how does it work: it functional behavior.
 ```
-std::function<bool(int,int)>wrapper  = [](int x,int y){return x<y;};
+function(arg1,arg2,...); //call function
 ```
-The significant application of lambda is that it can recall function.
+lambda is a special function expression, it is actually an instance of 
+a classs:
 ```
-int value = 3;
-vector<int> v{1,2,3,4,5,6,10};
+class{
+public: 
+	ReturnType operator()(params)const;
+};
 
-int count = std::count_if(v.begin(),v.end(),[value](int x){return x>value;});
+X f;
+f(arg1,arg2); //equals to f.operator()(arg1,arg2);
 ```
-This is most frequenct case of lambda to count the values.
+The following function print an integer:
 ```
-vector<int> v(10);
-int a = 0;
-int b = 1;
-std::generate(v.begin(),v.end(),[&a,&b]{int value =	b;b = b+a;a = value; 
-return value;});
-//v:{1,1,2,3,5,8,13,21,34,55}
-
-// Equivalent to std::iota(v.begin(), v.end(), 0);
-std::generate(v.begin(), v.end(), [n = 0] () mutable { return n++; });
-//v:{0,1,2,...}
-```
-Also lambda can be used for objects sort:
-```
-class Person:
+template<typename T>
+class Print
 {
 public:
-	Person(const string& first,const string& last):
-		firstName{first},lastName{last}
-		{}
-	Person() = default;
-	
-	string first()const{return firstName;}
-	string last() const {return lastName;}
-	
-private:
-	string firstName;
-	string lastName;
+	void operator()(T elem)const
+	{
+		cout<< elem<<'';
+	}
 };
 
 int main()
 {
-	vector<Person> vp;
-	//add person information
+	vector<int> v(10);
+	int init = 0;
+	std::generate(v.begin(),v.end(),[&init]{return init++;});
 	
-	//order by name
-	sort(vp.begin(),vp.end(),[](const Person& p1, const Person& p2)
-	{	return p1.last() < p2.last() || (p1.last() == p2.last() &&
-	p1.first()<p2.first());});
-	}
+	std::for_each(v.begin(),v.end(),Print<int>{});
+	
 	return 0;
 }
 ```
-For most of the STL algorithms, it can resilient use lambda expression to 
-achieve goal:
+This Print<int> is function object. STL algorithm is implemented generically.
+It doesn't care about the type of accepted object, but it must support funtion
+call.
 ```
-[capture-list](params)mutable(optional)constexpr (optional)(c++17)
-exception attribute -> ret{body}
-[capture-list](params)->ret{body}
-[capture-list](params){body}
-[capture-list]{body}
+//for_each implementation may differ
+namespace std
+{
+	template<typename Iterator,typename Operation>
+	Operation for_each(Iterator act,Iterator end, Operation op)
+	{
+		while(act !=end)
+		{
+			op(*act);
+			++act;
+		}
+		return op;
+	}
+}
 ```
-constexpr: can point to lambda expression is const functor.
-exception: can point to lambda can throw exception
-attributte: point to lambda charateristic
-body: executing body
-
-New in C++14: one is lambda template, another is lambda can catch expression.
+In essen, function object is class object, This also makes function objects have their own 
+unique advantages over ordinary functions:\
+**The function object is stateful**:Function objects are "smart functions" relative to 
+ordinary functions, just like smart pointers compared to traditional pointers. 
+Because function objects can have other methods and data members in addition to providing function caller methods.
+**Each function object has its own type**:For ordinary functions, as long as the signatures are consistent, their 
+types are the same. But this does not apply to function objects, because the type of a function object is the type 
+of its class. In this way, function objects have their own types, which means that function objects can be used for 
+template parameters, which greatly improves generic programming.
+**function objects are normally faster than ordinary functions:**
+Because function objects are generally used for template parameters, 
+templates are generally optimized at compile time.
 ```
-int x = 4;
-auto y = [&r = x,x = x +1]{r+=2;return x*x;}();
-cout << yb << endl; // 25 type of yb is int
-cout << xb << endl;//6
-
-cout<<yb<<endl;//25
-
-auto z = [str = "string"] {return str;}();
-//type of z is const char* 
-```
-Here catching right value and this value may not in its scope.
-Some objects can not be copied but can move, but lambda expression can catch 
-them.
-```
-auto mypi = std::make_unique<double>(3.1415);
-
-auto circle_area = [pi = std::move(mypi)](double r){return *pi*r*r;};
-cout<< circle_area(1.0)<<endl;
-```
-Template:
-```
-auto add = [](auto x, auto y){return x+y;};
-
-int x = add(2,3);
-double y = add(2.5,3.5);
-```
-
-
+//this is a stateful function object
+class IntSequence
+{
+public:
+	IntSequence(int initVal) : value{ initVal}{}
 	
+	int operator()(){return ++value;}
+private:
+	int value;
+};
+
+int main()
+{
+	vector<int> v(10);
+	std::generate(v.begin(),v.end(),IntSequence{0});
+	/*lambda can achieve the same effect
+		int init = 0;
+		std::generate(v.begin(),v.end(),[&init]{return ++init;});
+	*/
+	std::for_each(v.begin(), v.end(), [](int x) { cout << x << ' '; });
+	
+	return 0;
+}
+```
+The function object has a private member data. Each time calling it it will 
+increase. And lambda must use reference catching. Function object can implement
+more comlicated funciton:
+```
+class Meanvalue
+{
+public:
+	Meanvalue():num{0},sum{0}{}
+	
+	void operator()(int e)
+	{
+		++num;
+		sum +=num;
+	}
+	
+	double value()
+	{
+		return static_cast<double>(sum)/static_cast<double>(num);}
+	}
+private:
+	int num;
+	int sum;
+};
+
+int main(0
+{
+	vector<int> v{1,3,5,7};
+	Meanvalue mv = std::for_each(v.begin(),v.end(),Meanvalue{});
+	cout<<mv.value<<endl;
+}
+```
+If using lambda implement it, it will be a bit cumbersome. 
+This can be regarded as a unique advantage of function objects.
+
+
