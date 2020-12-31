@@ -1,131 +1,128 @@
-## function object is a general broad concept
-It is a high-level abstract. It doesn't care about what is the object,
-but just care about how does it work: it functional behavior.
+###In kontext of design pattern, the function binder is a special function object
+In header <functional> defines the following function binders:
+std::bind(op,arg..): bind function object op's parameter to special args.
+std::mem_fn(op): transform a member function to a function object.
+std::not1(op),std::not2(op): Unary and binary inverters
 ```
-function(arg1,arg2,...); //call function
+//if there are not parameter to bind, using std::placeholders::_1..
+std::placeholders::_1,std::placeholders::_2
+//example:
+auto minus10 = std::bind(std::minus<int>{},std::placeholders::_1,10);
+cout<<minus10(20)<<endl; //output 10
 ```
-lambda is a special function expression, it is actually an instance of 
-a classs:
+Sometimes binder can be used for sorting parameters:
 ```
-class{
-public: 
-	ReturnType operator()(params)const;
-};
+auto vminus = std::bind(std::minus<int>{},std::placeholders::_2,std::placeholders::_1);
+cout<<vminus(20,10)<<endl;//-10
+```
 
-X f;
-f(arg1,arg2); //equals to f.operator()(arg1,arg2);
+Binders can also be nested with each other to achieve the 
+combination of function objects:
 ```
-The following function print an integer:
+auto plus10times2 = std::bind(std::multiplies<int>{},
+	std::bind(std::plus<int>{},std::placeholders::_1,10),2);
+	
+cout<<plus10times2(4)<<endl;//28
+
+auto pow3 = std::bind(std::multiplies<int>{},std::bind(std::multiplies<int>{},
+std::placeholders::_1,std::placeholders:::_1),std::placeholders::_1);
+cout<<pow3(3)<<endl;//27
 ```
-template<typename T>
-class Print
+Using different function object combinations, the function binder can call global 
+functions. The following example is case-insensitive to determine whether a string 
+contains a specific substring:
+```
+char myToupper(char c)
+{
+	if(c >= 'a' && c <= 'z')
+		return static_cast<char>(c - 'a' + 'A');
+	return c;
+}
+
+int main()
+{
+	string s{"Internationalization"};
+	string sub{"Nation"};
+	
+	auto pos = std::search(s.begin(),s.end(),sub.begin(),sub.end(),
+					std::bind(std::equal_to<char>{},
+						std::bind(myToupper, std::placeholders::_1),
+						std::bind(myToupper, std::placeholders::_2)));
+	if(pos != s.end())
+	{
+		cout << sub << "is part of " <<s <<endl;
+	}
+	return 0;
+}
+```
+Binder default uses pass-by-value to bind parameters,if pass-by-reference is
+needed, using std::ref and std::cref. Former is normal reference and latter is
+const reference binding:
+```
+void f(int& n1, int& n2, const int& n3)
+{
+	cout<< "In function: " <<n1 <<' '<<n2<<' '<<n3<<'\n';
+	++n1;
+	++n2;
+	//++n3 cannot be compiled
+}
+
+int main()
+{
+	int n1 = 1,n2 =2, n3 =3;
+	auto boundf = std::bind(f, n1, std::ref(n2),std::cref(n3)));
+	n1 = 10;
+	n2 = 11;
+	n3 = 12;
+	cout<< "Before function: " <<n1 <<' ' <<n2<<' '<<n3<<'\n';
+	// 10 11 12
+	boundf();// in function : 1 11 12
+	cout<< "After function: "<<n1 <<' ' <<n2<<' '<<n3<<'\n';
+	// 10 12 12
+	return 0;
+}
+```
+As it can be seen that n1 is default bound with n1 = 1, this is only copying.
+It doesn't change the value of n1. n3 is const bound, its value cannot be changed.
+```
+class Person
 {
 public:
-	void operator()(T elem)const
-	{
-		cout<< elem<<'';
-	}
+	Person(const string& n):name{n}{}
+	void print()const {cout<<name<<endl;}
+	void print2(const string& prefix){cout<<prefix<<name<<endl;}
+private:
+	string name;
 };
 
 int main()
 {
-	vector<int> v(10);
-	int init = 0;
-	std::generate(v.begin(),v.end(),[&init]{return init++;});
+	vector<Person>p{Person{"Tick"},Person{"Trick}};
+	std::for_each(p.begin(),p.end(),std::bind(&Person::print,std::placeholders::_1));
 	
-	std::for_each(v.begin(),v.end(),Print<int>{});
-	
-	return 0;
-}
-```
-This Print<int> is function object. STL algorithm is implemented generically.
-It doesn't care about the type of accepted object, but it must support funtion
-call.
-```
-//for_each implementation may differ
-namespace std
-{
-	template<typename Iterator,typename Operation>
-	Operation for_each(Iterator act,Iterator end, Operation op)
-	{
-		while(act !=end)
-		{
-			op(*act);
-			++act;
-		}
-		return op;
-	}
-}
-```
-In essen, function object is class object, This also makes function objects have their own 
-unique advantages over ordinary functions:\
-**The function object is stateful**:Function objects are "smart functions" relative to 
-ordinary functions, just like smart pointers compared to traditional pointers. 
-Because function objects can have other methods and data members in addition to providing function caller methods.
-**Each function object has its own type**:For ordinary functions, as long as the signatures are consistent, their 
-types are the same. But this does not apply to function objects, because the type of a function object is the type 
-of its class. In this way, function objects have their own types, which means that function objects can be used for 
-template parameters, which greatly improves generic programming.
-**function objects are normally faster than ordinary functions:**
-Because function objects are generally used for template parameters, 
-templates are generally optimized at compile time.
-```
-//this is a stateful function object
-class IntSequence
-{
-public:
-	IntSequence(int initVal) : value{ initVal}{}
-	
-	int operator()(){return ++value;}
-private:
-	int value;
-};
-
-int main()
-{
-	vector<int> v(10);
-	std::generate(v.begin(),v.end(),IntSequence{0});
-	/*lambda can achieve the same effect
-		int init = 0;
-		std::generate(v.begin(),v.end(),[&init]{return ++init;});
-	*/
-	std::for_each(v.begin(), v.end(), [](int x) { cout << x << ' '; });
+	std::for_each(p.begin(),p.end(),std::bind(&Person::print2,std::placeholders::_1,
+	"Person: " ));
 	
 	return 0;
 }
 ```
-The function object has a private member data. Each time calling it it will 
-increase. And lambda must use reference catching. Function object can implement
-more comlicated funciton:
+Not only the member functions can be bound, also the virtual function can be bound.
 ```
-class Meanvalue
-{
-public:
-	Meanvalue():num{0},sum{0}{}
-	
-	void operator()(int e)
-	{
-		++num;
-		sum +=num;
-	}
-	
-	double value()
-	{
-		return static_cast<double>(sum)/static_cast<double>(num);}
-	}
-private:
-	int num;
-	int sum;
-};
-
-int main(0
-{
-	vector<int> v{1,3,5,7};
-	Meanvalue mv = std::for_each(v.begin(),v.end(),Meanvalue{});
-	cout<<mv.value<<endl;
-}
+vector<int> data{1,2,3,4};
+auto func = std::bind([](const vector<int>& data){cout<<data.size()<<endl;},
+									std::move(data));
+func();
+cout<<data.size()<<endl;//0
 ```
-If using lambda implement it, it will be a bit cumbersome. 
-This can be regarded as a unique advantage of function objects.
-
-
+Here it binder implements move syntax, as for left parameter, binding object is
+pass-by-value. As for right parameter, binding parameter is move construction.
+When calling member functions, std::mem_fn is also for it:
+```
+vector<Person> p{Person{"Tick"},Person{"Trick"}};
+std::for_each(p.begin(),p.end(),std::mem_fn(&Person::print));
+//output Trick Trick
+Person n{"Bob"};
+std::mem_fn(&Person::print2)(n,"Person: ");
+//output Person: Bob
+```
+std::men_fn doesn't need to bind parameter, it is more easier to call member function.
