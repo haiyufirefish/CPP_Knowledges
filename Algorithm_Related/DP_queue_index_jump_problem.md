@@ -40,6 +40,7 @@ int maxJumps(vector<int> &A,int d){
 		int a = A[i];
 		while(stack.size()&&A[stack.back()] < A[i]){
 		   int pre = A[stack.back()];
+		   //for the case [3,3,3,3] here cannot be if
 		   while(stack.size()&&pre == A[stack.back()]){
 				int j = stack.back();stack.pop_back();
 				if(i-j<=d)
