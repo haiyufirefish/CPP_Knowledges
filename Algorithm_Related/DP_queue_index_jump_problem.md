@@ -65,4 +65,59 @@ int maxJumps(vector<int> &A,int d){
 
 }
 ```
+This problem about how many steps to the end,using greedy:
+```
+ int jump(vector<int>& nums) {
+        int step=1,n = nums.size(),i,currentend = 0,newend = 0;
+        if(n<=1)return 0;
+        for(i = 0;i<=currentend;++i){
+            newend = max(newend,i+nums[i]);
+            if(newend>=n-1)return step;
+            if(i==currentend){
+                currentend = newend;
+                ++step;
+               
+            }
+        }
+        return INT_MAX;
+    }
+```
+BFS jump problem, the .clear() method is the keypoint:
+```
+  int minJumps(vector<int>& arr) {
+        int n = arr.size();
+        if(n<2)return 0;
+        queue<int>q;
+        q.push(0);
+        vector<bool>visited(n,false);
+        visited[0] = true;
+        int step = 0;
+        unordered_map<int,vector<int>>mp;
+        for(int i = 0;i<n;i++){
+            mp[arr[i]].push_back(i);
+        }
+        
+        //bfs 
+        while(!q.empty()){
+            
+            for(int size = q.size();size>0;--size){
+                int j = q.front();
+                q.pop();
+                if(j==n-1)return step;
+                vector<int> &next = mp[arr[j]];
+                next.push_back(j-1);
+                next.push_back(j+1);
+                for(int x:next){
+                    if(x>0&&x<n&&!visited[x]){
+                        visited[x] = true;
+                        q.push(x);
+                    }
+                }
+                next.clear();
+            }
+            step++;
+        }
+        return 0;
+    }
+```
 			
