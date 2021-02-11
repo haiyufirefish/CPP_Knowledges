@@ -129,6 +129,43 @@ can reduce the extra cost. The tradeoff is that only B can see A has changed the
 	S1.c = a +b;
 	S2.e = c +d;
 S2 is dependent from S1.
+```
+struct X
+{
+int i;
+std::string s;
+};
+std::atomic<X*> p;
+std::atomic<int> a;
+void create_x()
+{
+X* x=new X;
+x->i=42;
+x->s="hello";
+a.store(99,std::memory_order_relaxed);
+p.store(x,std::memory_order_release);
+}
+
+void use_x()
+{
+X* x;
+while(!(x=p.load(std::memory_order_consume)))
+std::this_thread::sleep_for(
+std::chrono::microseconds(1));
+assert(x->i==42);//ok
+assert(x->s=="hello");//ok
+assert(a.load(std::memory_order_relaxed)==99);//maybe fire
+}
+int main()
+{
+std::thread t1(create_x);
+std::thread t2(use_x);
+t1.join();
+t2.join();
+}
+```
+The above code shows that dependency-ordered-before. variable x carries a 
+dependency into p
 
 From [IBM paper](https://www.researchgate.net/profile/Paul_Mckenney/publication/228824849_Memory_Barriers_a_Hardware_View_for_Software_Hackers/links/0deec51aad19050a3f000000/Memory-Barriers-a-Hardware-View-for-Software-Hackers.pdf?origin=publication_detail)
 Loads are not reordered with other loads.
@@ -143,3 +180,114 @@ In high level language achieve the control of multithreading in multiprocessors.
 The reason why C++ offering this 6 modes: define how program execute in a thread.
 In order to solve the problems happen in multihreading enviroment.
 
+Sometimes carrying a dependency causes unnecessary overhead
+- prevents cretain compiler optimization
+- std::kill_dependency can be used to explicitly break dependency chain
+- Copies argument to return value
+This may be used to avoid **unnecessary std::memory_order_acquire fences** when 
+the dependency chain leaves function scope 
+
+Release sequence: assures multiple threads can synchronize their loads on a single 
+store.
+```
+#include <thread>
+#include <atomic>
+#include <cassert>
+#include <vector>
+#include <iostream>
+
+std::vector<int> queue_data;
+std::atomic<int> count;
+void populate_queue()
+{
+    unsigned const number_of_items = 20;
+    queue_data.clear();
+    for (unsigned i = 0; i < number_of_items; ++i)
+    {
+        queue_data.push_back(i);
+    }
+    count.store(number_of_items,
+        std::memory_order_release);
+}
+void process(int a) {
+    std::cout << a << "\n";
+}
+void wait_for_more_items() {
+    std::this_thread::sleep_for(
+        std::chrono::microseconds(1));
+}
+
+void consume_queue_items() {
+    while (true) {
+        int item_index;
+        if ((item_index = count.fetch_sub(1,
+            std::memory_order_acquire)) <= 0) {
+            wait_for_more_items();
+            continue;
+        }
+        process(queue_data[item_index - 1]);
+    }
+}
+
+int main() {
+    std::thread a(populate_queue);
+    std::thread b(consume_queue_items);
+    std::thread c(consume_queue_items);
+    a.join();
+    b.join();
+    c.join();
+	//output 0-19 arbitary
+}
+```
+
+Memory fence:
+Establishes memory synchronization ordering of non-atomic and relaxed atomic accesses, as instructed by order, 
+without an associated atomic operation.
+```
+std::atomic<bool> x,y;
+std::atomic<int> z;
+void write_x_then_y()
+{
+x.store(true,std::memory_order_relaxed);
+std::atomic_thread_fence(std::memory_order_release);
+y.store(true,std::memory_order_relaxed);
+}
+
+void read_y_then_x()
+{
+while(!y.load(std::memory_order_relaxed));
+std::atomic_thread_fence(std::memory_order_acquire);
+if(x.load(std::memory_order_relaxed))
+++z;
+}
+
+int main()
+{
+x=false;
+y=false;
+z=0;
+std::thread a(write_x_then_y);
+std::thread b(read_y_then_x);
+a.join();
+b.join();
+assert(z.load()!=0);
+}
+//if x is not atomic type: 
+bool x=false;
+std::atomic<bool> y;
+std::atomic<int> z;
+void write_x_then_y() {
+x=true;
+std::atomic_thread_fence(std::memory_order_release);
+y.store(true,std::memory_order_relaxed);
+}
+void read_y_then_x() {
+while(!y.load(std::memory_order_relaxed));
+std::atomic_thread_fence(std::memory_order_acquire);
+if(x)
+++z;
+}
+```
+The release fence sychronizes with the acquire fence
+Effect of release fence as if the store to y was tagged as release
+effect of acquire fence as if the load from y was tagged as acquire

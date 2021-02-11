@@ -91,4 +91,6 @@ flag.clear(std::memory_order_release);
 }
 };
 ```
-
+Differences between memory_exchange_weak and memory_exchange_strong:
+- strong always check for spurious failure and mask it 
+- weak is used in loop(better performance) and strong for non-loop.
