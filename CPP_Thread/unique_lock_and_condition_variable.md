@@ -6,7 +6,7 @@ condition_variable.
 - perform the modification while the lock is held
 - execute notify_one or notify_all on the std::condition_variable
 
-It only works with std::unique_lock<std::mutex>.
+It only works with std::unique_lock \<std::mutex\>.
 And std::condition_variable_any works with other normal lock object,such
 as std::shared_lock.
 ```
