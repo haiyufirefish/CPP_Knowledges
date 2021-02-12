@@ -24,6 +24,7 @@ catch(...)
 	t.join();
 }
 ```
+The thread::detach() is called, the thread of execution is "detached" from the thread object and is no longer represented by a thread object - they are two independent things.
 ### RAII(Resource Acquisition Is Initialization)
 Check if a thread can join, using joinable:
 ```
