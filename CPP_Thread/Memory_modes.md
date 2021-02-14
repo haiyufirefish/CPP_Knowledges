@@ -121,7 +121,7 @@ int main()
     return 0;
 }
 ```
-A muss happend before B, D must happen before D
+A muss happend before B, A must happen before D
 - Release -- consume: If only operation for x is needed, not the two thread. Using this way 
 can reduce the extra cost. The tradeoff is that only B can see A has changed the value x.
 
