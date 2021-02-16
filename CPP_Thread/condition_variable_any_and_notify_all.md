@@ -3,7 +3,7 @@ The condition_variable_any class is a generalization of std::condition_variable.
 Whereas std::condition_variable works only on std::unique_lock<std::mutex>, 
 condition_variable_any can operate on any lock that meets the BasicLockable requirements.
 
--If the lock is std::unique_lock, std::condition_variable may provide better performance.
+- If the lock is std::unique_lock, std::condition_variable may provide better performance.
 - condition_variable_any **cannot combine with lock_guard**, as lock_guard doesn't  have lock() function
 ```
 	// false code
