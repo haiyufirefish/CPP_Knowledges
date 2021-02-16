@@ -5,7 +5,7 @@ after the other.
 Threads are much like lightweight processes: each thread runs independently of
 the others, and each thread may run a different sequence of instructions.
 But all threads in a process share the same address space, and most of the data can be
-accessed directly from all threads¡ªglobal variables remain global, and pointers or references
+accessed directly from all threadsÂ¡Âªglobal variables remain global, and pointers or references
 to objects or data can be passed around among threads.
 ### The two reasons using concurrency:separation of concerns and performance
 For performance: there are two approaches: **data parallelism** and task parallelism.
@@ -13,7 +13,7 @@ For performance: there are two approaches: **data parallelism** and task paralle
 ### when to use parallelism?
 Fundamentally, the only reason not to use concurrency is when the benefit is not
 worth the cost. Code using concurrency is harder to understand in many cases, so
-there¡¯s a direct intellectual cost to writing and maintaining multithreaded code, and
+there is a direct intellectual cost to writing and maintaining multithreaded code, and
 the additional complexity can also lead to more bugs.
 Use of concurrency for performance is just like any other optimization strategy: it
 has potential to greatly improve the performance of your application, but it can also
