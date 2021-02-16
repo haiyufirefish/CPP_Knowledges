@@ -94,3 +94,16 @@ flag.clear(std::memory_order_release);
 Differences between memory_exchange_weak and memory_exchange_strong:
 - strong always check for spurious failure and mask it 
 - weak is used in loop(better performance) and strong for non-loop.
+
+Store operation:
+- can use memory_order_relaxed, memory_order_release,
+or memory_order_seq_cst ordering
+
+Load operations:
+- can have memory_order_relaxed, memory_order_consume,
+memory_order_acquire, or memory_order_seq_cst ordering
+
+Read-modify-write operations:
+- can have memory_order_relaxed, memory_
+order_consume, memory_order_acquire, memory_order_release, memory_order_
+acq_rel, or memory_order_seq_cst ordering
