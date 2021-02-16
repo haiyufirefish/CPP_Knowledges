@@ -1,4 +1,4 @@
-###The chapter is about std::shared_mutex
+### The chapter is about std::shared_mutex
 shared_mutex is introduced in C++ 14. It usually used in situations
 when multiple reader can access the same resource at the time without
 causing data races, but only one writer can do so.
