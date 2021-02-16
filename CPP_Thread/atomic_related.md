@@ -21,7 +21,7 @@ while(!data_ready.load()) //1
 {
 std::this_thread::sleep(std::milliseconds(1));
 }
-std::cout<<¡±The answer=¡±<<data[0]<<¡±\n¡±; //2
+std::cout<< "The answer= "<<data[0]<<'\n'; //2
 }
 void writer_thread()
 {
