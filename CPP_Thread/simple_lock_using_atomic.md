@@ -48,3 +48,4 @@ int main()
  
 }
 ```
+For thread 1, it locks, and the flag equals to 1. If thread 2 wants to make progress, it will stay in the waiting area, as flag equals to 1 and expected equals to 0 unitl unlock.
