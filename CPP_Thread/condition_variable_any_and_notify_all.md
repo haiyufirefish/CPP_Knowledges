@@ -83,3 +83,5 @@ int main()
     return 0;
 }
 ```	
+- The differences betwenn atomic and condition_variable synchronization:
+The difference is that a condition variable doesn't consume CPU cycles while another thread is waiting for it. If you use an atomic variable for synchronization you have to keep checking its value in a loop.
