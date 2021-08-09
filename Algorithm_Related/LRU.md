@@ -7,7 +7,7 @@ When the capacity is full, the element that has not been used the longest is del
 which means that the cache must support quick insertion and deletion of elements at any position.
 So **LinkedHashmap** support above functionality.
 The structure of linkedHashmap satisfy this requirements:
-![LinkedHashmap](CPP_Knowledges/images/LinkedHashmap.jpg)
+![LinkedHashmap](../images/LinkedHashmap.jpg)
 Relying on this structure, it has following charateristics:
 1. If we add elements from the end of the linked list by default every time, then obviously the elements 
 closer to the end are the most recently used, and the elements closer to the head are the least used.
