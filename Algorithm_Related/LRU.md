@@ -1,17 +1,17 @@
 This article is about LRU.
-**put" and **get"" method complexity is O(1)://
+**put" and **get"" method complexity is O(1):
 1.Obviously, the elements in the cache must have a time sequence to distinguish the most recently used and long-unused data. 
-When the capacity is full, the element that has not been used the longest is deleted to make room.//
+When the capacity is full, the element that has not been used the longest is deleted to make room.
 2. We need to quickly find whether a key already exists in the cache and get the corresponding val.
 3. Every time you access a key in the cache, you need to change this element to the most recently used element, 
-which means that the cache must support quick insertion and deletion of elements at any position.//
+which means that the cache must support quick insertion and deletion of elements at any position.
 So **LinkedHashmap** support above functionality.
 The structure of linkedHashmap satisfy this requirements:
-![LinkedHashmap](./images/LinkedHashmap.jpg)
+![LinkedHashmap](CPP_Knowledges/images/LinkedHashmap.jpg)
 Relying on this structure, it has following charateristics:
 1. If we add elements from the end of the linked list by default every time, then obviously the elements 
-closer to the end are the most recently used, and the elements closer to the head are the least used.//
-2. For a certain key, we can quickly locate the node in the linked list through the hash table to obtain the corresponding value//
+closer to the end are the most recently used, and the elements closer to the head are the least used.
+2. For a certain key, we can quickly locate the node in the linked list through the hash table to obtain the corresponding value
 3. The linked list obviously supports quick insertion and deletion at any position, just change the pointer. 
 It's just that the traditional linked list cannot quickly access the elements at a certain position according to the index. 
 With the help of the hash table, you can quickly map to any linked list node through the key, and then insert and delete it.
