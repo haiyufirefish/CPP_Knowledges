@@ -1,5 +1,5 @@
 This article is about LRU.
-**put" and **get"" method complexity is O(1):
+**put** and **get** method complexity is O(1):
 1.Obviously, the elements in the cache must have a time sequence to distinguish the most recently used and long-unused data. 
 When the capacity is full, the element that has not been used the longest is deleted to make room.
 2. We need to quickly find whether a key already exists in the cache and get the corresponding val.
